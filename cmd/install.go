@@ -14,7 +14,7 @@ import (
 var installCmd = &cobra.Command{
 	Use:     "install [flags] URL",
 	Aliases: []string{"i"},
-	Short:   "Install and update modpack",
+	Short:   "Install modpack",
 	Args:    exactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// args
