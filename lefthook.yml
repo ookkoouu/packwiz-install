@@ -1,0 +1,16 @@
+# Refer for explanation to following link:
+# https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md
+
+pre-commit:
+  parallel: true
+  commands:
+    gofmt:
+      glob: "*.{go}"
+      run: >
+        go fmt
+        && git update-index --again
+    govet:
+      glob: "*.{go}"
+      run: >
+        go vet
+        && git update-index --again

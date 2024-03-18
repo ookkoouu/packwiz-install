@@ -41,5 +41,4 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - "^chore:"
       - "^test:"
