@@ -1,8 +1,8 @@
 name: Publish
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 jobs:
   release-please:
@@ -11,13 +11,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-go@v5
 
-      - uses: goreleaser/goreleaser-action@v5
+      - uses: go-semantic-release/action@v1
         with:
-          args: release --clean
+          hooks: goreleaser
+          changelog-file: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
