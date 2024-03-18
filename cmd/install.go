@@ -57,7 +57,7 @@ func init() {
 
 	installCmd.Flags().String("hash", "", `Hash of 'pack.toml' in the form of "<format>:<hash>" e.g. "sha256:abc012..."`)
 	installCmd.Flags().StringP("dir", "d", ".", "Directory to install modpack")
-	installCmd.Flags().StringP("proxy", "p", ".", `Proxy servier in the form of "<host>:<port>" e.g. "proxy-host.com:8080"`)
+	installCmd.Flags().StringP("proxy", "p", "", `Proxy servier in the form of "<host>:<port>" e.g. "proxy-host.com:8080"`)
 }
 
 func parseHashFlag(s string) (format string, hash string, ok bool) {
