@@ -14,3 +14,6 @@ pre-commit:
       run: >
         go vet
         && git update-index --again
+    goreleaser:
+      glob: .goreleaser.yaml
+      run: goreleaser release --snapshot --clean
