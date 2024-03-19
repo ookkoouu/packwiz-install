@@ -8,7 +8,7 @@ import (
 	"net/url"
 )
 
-var cfApiKey = "$2a$10$6BqncsODxEQp0JyQ.sExoeF5C44DL2Bunh2iyJ2jnDUeoV/hGyaya"
+var cfApiKey = ""
 
 type CurseClient struct {
 	httpClient *http.Client
@@ -38,6 +38,9 @@ func NewCurseClient(apiKey string, opts ...CurseOptFn) *CurseClient {
 var DefaultCurseClient = NewCurseClient(cfApiKey)
 
 func (c *CurseClient) get(path string) ([]byte, error) {
+	if c.apiKey == "" {
+		return nil, fmt.Errorf("curseforge api key is not set")
+	}
 	res, err := httpGet(c.httpClient, c.host.JoinPath(path).String(), WithHeader("x-api-key", c.apiKey))
 	if err != nil {
 		return nil, err
