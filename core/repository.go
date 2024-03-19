@@ -66,11 +66,15 @@ func NewRepository(packUrl string, opts ...RepoOptFn) (*Repository, error) {
 	for _, opt := range opts {
 		opt(repo)
 	}
-	repo.LoadPack()
+
+	_, err = repo.LoadMods()
+	if err != nil {
+		return nil, err
+	}
 	return repo, nil
 }
 
-func (r *Repository) LoadPack() (*PackToml, error) {
+func (r *Repository) loadPack() (*PackToml, error) {
 	var (
 		data []byte
 		err  error
@@ -96,9 +100,9 @@ func (r *Repository) LoadPack() (*PackToml, error) {
 	return pack, nil
 }
 
-func (r *Repository) LoadIndex() (*IndexToml, error) {
+func (r *Repository) loadIndex() (*IndexToml, error) {
 	if r.Pack == nil {
-		_, err := r.LoadPack()
+		_, err := r.loadPack()
 		if err != nil {
 			return nil, err
 		}
@@ -118,9 +122,9 @@ func (r *Repository) LoadIndex() (*IndexToml, error) {
 	return index, nil
 }
 
-func (r *Repository) LoadMetafiles() ([]*MetafileToml, error) {
+func (r *Repository) loadMetafiles() ([]*MetafileToml, error) {
 	if r.Index == nil {
-		_, err := r.LoadIndex()
+		_, err := r.loadIndex()
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +173,7 @@ func (r *Repository) LoadMetafiles() ([]*MetafileToml, error) {
 
 func (r *Repository) LoadMods() ([]*Mod, error) {
 	if r.Index == nil || r.Metafiles == nil {
-		_, err := r.LoadMetafiles()
+		_, err := r.loadMetafiles()
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +191,7 @@ func (r *Repository) LoadMods() ([]*Mod, error) {
 
 			downloadUrl := metafile.Download.Url
 			if downloadUrl == "" && metafile.Download.Mode == "metadata:curseforge" {
-				cfData := metafile.Update["curseforge"]
+				cfData := metafile.Update.CurseForge
 				url, err := DefaultCurseClient.GetDownloadUrl(cfData.ProjectId, cfData.FileId)
 				if err != nil {
 					return nil, fmt.Errorf("curseforge fetch: %w", err)
@@ -257,7 +261,7 @@ func (r *Repository) CheckIntegrity(m *Mod) (bool, error) {
 	return valid, nil
 }
 
-func (r *Repository) WriteFileMod(m *Mod) error {
+func (r *Repository) saveMod(m *Mod) error {
 	_, err := filepath.Abs(r.LocalBaseDir)
 	if r.LocalBaseDir == "" || err != nil {
 		return fmt.Errorf("BaseDir required")
@@ -284,6 +288,23 @@ func (r *Repository) WriteFileMod(m *Mod) error {
 		return fmt.Errorf("write file: %w", err)
 	}
 	return nil
+}
+
+func (r *Repository) SaveMods() error {
+	if r.Mods == nil {
+		return fmt.Errorf("run LoadMods before save")
+	}
+
+	eg := errgroup.Group{}
+	eg.SetLimit(runtime.NumCPU())
+	for _, m := range r.Mods {
+		m := m
+		eg.Go(func() error {
+			return r.saveMod(m)
+		})
+	}
+
+	return eg.Wait()
 }
 
 func (r *Repository) Install(ctx context.Context) error {
@@ -315,7 +336,7 @@ func (r *Repository) Install(ctx context.Context) error {
 				return err
 			}
 
-			err = r.WriteFileMod(m)
+			err = r.saveMod(m)
 			if err != nil {
 				return err
 			}

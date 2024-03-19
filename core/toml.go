@@ -30,12 +30,14 @@ type IndexedfileToml struct {
 	Preserve   bool   `toml:"preserve,omitempty"`
 }
 
-type UpdateToml struct {
-	FileId         int    `toml:"file-id,omitempty"`
-	ProjectId      int    `toml:"project-id,omitempty"`
-	ReleaseChannel string `toml:"release-channel,omitempty"`
-	ModId          string `toml:"mod-id,omitempty"`
-	Version        string `toml:"version,omitempty"`
+type UpdateModrinth struct {
+	ModId   string `toml:"mod-id,omitempty"`
+	Version string `toml:"version,omitempty"`
+}
+
+type UpdateCurseForge struct {
+	FileId    uint32 `toml:"file-id,omitempty"`
+	ProjectId uint32 `toml:"project-id,omitempty"`
 }
 
 type MetafileToml struct {
@@ -48,13 +50,15 @@ type MetafileToml struct {
 		Url        string `toml:"url,omitempty"`
 		Mode       string `toml:"mode,omitempty"`
 	} `toml:"download"`
-	Update map[string]UpdateToml `toml:"update,omitempty"`
-	Option struct {
+	Update *struct {
+		Modrinth   *UpdateModrinth   `toml:"modrinth,omitempty,nullable"`
+		CurseForge *UpdateCurseForge `toml:"curseforge,omitempty,nullable"`
+	} `toml:"update,omitempty"`
+	Option *struct {
 		Optional    bool   `toml:"optional"`
 		Default     bool   `toml:"default,omitempty"`
 		Description string `toml:"description,omitempty"`
 	} `toml:"option,omitempty"`
-	// IndexFileToml.File
 	IndexName string
 }
 

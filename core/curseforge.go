@@ -63,7 +63,7 @@ func (c *CurseClient) getJson(path string, v any) error {
 	return nil
 }
 
-func (c *CurseClient) GetDownloadUrl(projId int, fileId int) (string, error) {
+func (c *CurseClient) GetDownloadUrl(projId uint32, fileId uint32) (string, error) {
 	path := fmt.Sprintf("/v1/mods/%d/files/%d/download-url", projId, fileId)
 	resUrl := new(resDownloadUrl)
 	if err := c.getJson(path, resUrl); err != nil {
