@@ -28,7 +28,7 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/ookkoouu/packwiz-install/cmd.version={{ .Version }}
-      - -X github.com/ookkoouu/packwiz-install/cmd.cfApiKey={{ .Env.CF_API_KEY }}
+      - -X github.com/ookkoouu/packwiz-install/core.cf_api_key={{ .Env.CF_API_KEY }}
 
 archives:
   - format: binary

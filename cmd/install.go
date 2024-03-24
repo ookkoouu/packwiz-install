@@ -14,7 +14,7 @@ import (
 var installCmd = &cobra.Command{
 	Use:     "install [flags] URL",
 	Aliases: []string{"i"},
-	Short:   "Install modpack",
+	Short:   "Install and update modpack",
 	Args:    exactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// args
@@ -23,29 +23,41 @@ var installCmd = &cobra.Command{
 			return fmt.Errorf("install command requires URL of 'pack.toml'")
 		}
 		// flags
-		hformat, hhash, ok := parseHashFlag(cmd.Flag("hash").Value.String())
-		if !ok {
-			return fmt.Errorf("invalid --hash format <HashFormat>:<Hash>")
+		var (
+			hformat string
+			hhash   string
+		)
+		if cmd.Flag("hash").Value.String() != "" {
+			var ok bool
+			hformat, hhash, ok = parseHashFlag(cmd.Flag("hash").Value.String())
+			if !ok {
+				return fmt.Errorf("invalid --hash format <HashFormat>:<Hash>")
+			}
 		}
 
-		repo, err := core.NewRepository(
-			packUrl.String(),
-			core.WithHash(hformat, hhash),
-			core.WithDir(cmd.Flag("dir").Value.String()),
-			core.WithProxy(cmd.Flag("proxy").Value.String()),
-		)
+		repo := core.NewRepository(core.DefaultHttpClient, packUrl, hformat, hhash)
+		err = repo.Load(cmd.Context())
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
+		}
+		pack, err := core.NewPack(repo)
+		if err != nil {
+			return err
+		}
+		inst, err := core.NewLocalInstaller(cmd.Flag("dir").Value.String(), pack)
+		if err != nil {
+			return err
 		}
 
 		fmt.Println("URL:", packUrl)
-		fmt.Println("Hash:", hformat, hhash)
-		fmt.Println("Dir:", cmd.Flag("dir").Value.String())
+		fmt.Println("Dir:", inst.BaseDir)
 
-		err = repo.Install(cmd.Context())
+		updates, err := inst.Install(cmd.Context())
 		if err != nil {
-			return fmt.Errorf("install error: %w", err)
+			return err
 		}
+
+		fmt.Println(updates.String())
 		fmt.Println("Complete.")
 
 		return nil
@@ -57,7 +69,6 @@ func init() {
 
 	installCmd.Flags().String("hash", "", `Hash of 'pack.toml' in the form of "<format>:<hash>" e.g. "sha256:abc012..."`)
 	installCmd.Flags().StringP("dir", "d", ".", "Directory to install modpack")
-	installCmd.Flags().StringP("proxy", "p", "", `Proxy servier in the form of "<host>:<port>" e.g. "proxy-host.com:8080"`)
 }
 
 func parseHashFlag(s string) (format string, hash string, ok bool) {

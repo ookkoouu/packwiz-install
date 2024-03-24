@@ -7,13 +7,13 @@ pre-commit:
     gofmt:
       glob: "*.{go}"
       run: >
-        go fmt
+        go fmt ./...
         && git update-index --again
     govet:
       glob: "*.{go}"
       run: >
-        go vet
+        go vet ./...
         && git update-index --again
     goreleaser:
       glob: .goreleaser.yaml
-      run: goreleaser release --snapshot --clean
+      run: CF_API_KEY="" goreleaser release --snapshot --clean

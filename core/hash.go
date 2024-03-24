@@ -26,10 +26,6 @@ func MatchHash(data []byte, hashFormat string, hash string) (bool, error) {
 	}
 	hashgot := fmt.Sprintf("%x", hasher.Sum(nil))
 	if !strings.EqualFold(hash, hashgot) {
-		fmt.Println("hash expect", hash)
-		fmt.Println("hash got", hashgot)
-		//fmt.Println("hash got", string(data))
-
 		return false, nil
 	}
 	return true, nil

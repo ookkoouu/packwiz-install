@@ -1,85 +1,63 @@
 package core
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
+	"os"
 )
 
-var cfApiKey = ""
+var (
+	cf_api_key         = ""
+	DefaultCurseClient = NewCurseClient(getApiKey())
+)
 
-type CurseClient struct {
-	httpClient *http.Client
-	apiKey     string
-	host       *url.URL
-}
-
-type CurseOptFn func(c *CurseClient)
-
-type resDownloadUrl struct {
+type cfDownloadUrlRes struct {
 	Data string `json:"data"`
 }
 
-func NewCurseClient(apiKey string, opts ...CurseOptFn) *CurseClient {
-	u, _ := url.ParseRequestURI("https://api.curseforge.com")
+type CurseClient struct {
+	apiKey     string
+	httpClient HttpClient
+}
+
+func NewCurseClient(apiKey string) *CurseClient {
 	c := &CurseClient{
-		httpClient: DefaultHttpClient,
-		apiKey:     apiKey,
-		host:       u,
-	}
-	for _, opt := range opts {
-		opt(c)
+		apiKey: apiKey,
+		httpClient: NewHttpClient(
+			WithBaseURL("https://api.curseforge.com"),
+			WithAccept(acceptJson),
+			WithHeader("user-agent", userAgent),
+			WithHeader("x-api-key", apiKey),
+		),
 	}
 	return c
 }
 
-var DefaultCurseClient = NewCurseClient(cfApiKey)
-
-func (c *CurseClient) get(path string) ([]byte, error) {
-	if c.apiKey == "" {
-		return nil, fmt.Errorf("curseforge api key is not set")
+func getApiKey() string {
+	key := os.Getenv("CF_API_KEY")
+	if key == "" {
+		key = cf_api_key
 	}
-	res, err := httpGet(c.httpClient, c.host.JoinPath(path).String(), WithHeader("x-api-key", c.apiKey))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read response body: %w", err)
-	}
-	return data, nil
+	return key
 }
 
-func (c *CurseClient) getJson(path string, v any) error {
-	data, err := c.get(path)
-	if err != nil {
-		return err
+func (c *CurseClient) getJson(ctx context.Context, path string, v any) error {
+	if c.apiKey == "" {
+		return fmt.Errorf("invalid curseforge api key")
 	}
-	err = json.Unmarshal(data, v)
+	err := httpGetJson(ctx, c.httpClient, path, &v)
 	if err != nil {
-		return fmt.Errorf("decode json: %w", err)
+		return fmt.Errorf("curseforge api: %w", err)
 	}
 	return nil
 }
 
-func (c *CurseClient) GetDownloadUrl(projId uint32, fileId uint32) (string, error) {
-	path := fmt.Sprintf("/v1/mods/%d/files/%d/download-url", projId, fileId)
-	resUrl := new(resDownloadUrl)
-	if err := c.getJson(path, resUrl); err != nil {
+func (c *CurseClient) GetDownloadUrl(ctx context.Context, d *CurseforgeData) (string, error) {
+	path := fmt.Sprintf("/v1/mods/%d/files/%d/download-url", d.ProjectID, d.FileID)
+	var resUrl cfDownloadUrlRes
+	err := c.getJson(ctx, path, &resUrl)
+	if err != nil {
 		return "", err
 	}
 	return resUrl.Data, nil
-}
-
-func WithHost(host string) CurseOptFn {
-	u, err := url.ParseRequestURI(host)
-	return func(c *CurseClient) {
-		if err == nil {
-			c.host = u
-		}
-	}
 }
