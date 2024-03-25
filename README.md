@@ -1,6 +1,6 @@
 # packwiz-install
-A Go port of [packwiz/packwiz-installer](https://github.com/packwiz/packwiz-installer).  
-Install and update modpack with simple commands.  
+An standalone updater for packwiz modpacks with simple commands. No need to install Java anymore!  
+I hope it replaces [packwiz-installer](https://github.com/packwiz/packwiz-installer) and [packwiz-installer-bootstrap](https://github.com/packwiz/packwiz-installer-bootstrap).  
 
 # Usage
 1. [Download binary from release](https://github.com/ookkoouu/packwiz-install/releases/latest) and put it on `.minecraft` folder.
