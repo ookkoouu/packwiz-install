@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/packwiz/packwiz v0.0.0-20231225004244-7545d9a77773
-	github.com/pelletier/go-toml/v2 v2.1.1
+	github.com/pelletier/go-toml/v2 v2.2.0
 	github.com/spf13/cobra v1.8.0
 )
 
