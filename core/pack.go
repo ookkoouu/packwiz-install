@@ -130,7 +130,7 @@ func tomlToPack(
 			if hashFmt == "" {
 				hashFmt = index.HashFormat
 			}
-			modPath := filepath.Join(filepath.Dir(pack.Index.File), f.File)
+			modPath := filepath.ToSlash(filepath.Join(filepath.Dir(pack.Index.File), f.File))
 			modUrl := packUrl.JoinPath("..", modPath)
 			dl := &Download{
 				Type: DL_Url,
