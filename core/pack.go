@@ -114,8 +114,8 @@ func tomlToPack(
 				}
 			}
 
-			modDir := filepath.Join(filepath.Dir(pack.Index.File), filepath.Dir(f.File))
-			modPath := filepath.Join(modDir, metafile.Filename)
+			modDir := filepath.ToSlash(filepath.Join(filepath.Dir(pack.Index.File), filepath.Dir(f.File)))
+			modPath := filepath.ToSlash(filepath.Join(modDir, metafile.Filename))
 			m := &Mod{
 				Path:       modPath,
 				Hash:       metafile.Download.Hash,
