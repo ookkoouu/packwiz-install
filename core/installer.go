@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -45,10 +46,10 @@ type Installer interface {
 type LocalInstaller struct {
 	BaseDir    string
 	Pack       *Pack
-	httpClient HttpClient
+	httpClient *http.Client
 }
 
-func NewLocalInstaller(dir string, p *Pack) (*LocalInstaller, error) {
+func NewLocalInstaller(p *Pack, dir string) (*LocalInstaller, error) {
 	abs, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -56,7 +57,7 @@ func NewLocalInstaller(dir string, p *Pack) (*LocalInstaller, error) {
 	return &LocalInstaller{
 		BaseDir:    abs,
 		Pack:       p,
-		httpClient: DefaultHttpClient,
+		httpClient: http.DefaultClient,
 	}, nil
 }
 

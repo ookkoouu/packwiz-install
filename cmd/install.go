@@ -35,7 +35,7 @@ var installCmd = &cobra.Command{
 			}
 		}
 
-		repo := core.NewRepository(core.DefaultHttpClient, packUrl, hformat, hhash)
+		repo := core.NewRepository(packUrl, hformat, hhash)
 		err = repo.Load(cmd.Context())
 		if err != nil {
 			return err
@@ -44,7 +44,7 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		inst, err := core.NewLocalInstaller(cmd.Flag("dir").Value.String(), pack)
+		inst, err := core.NewLocalInstaller(pack, cmd.Flag("dir").Value.String())
 		if err != nil {
 			return err
 		}

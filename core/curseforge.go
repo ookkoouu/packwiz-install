@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+
+	"github.com/carlmjohnson/requests"
 )
 
 var (
 	cf_api_key         = ""
+	cf_api_host        = "https://api.curseforge.com"
 	DefaultCurseClient = NewCurseClient(getApiKey())
 )
 
@@ -17,20 +20,17 @@ type cfDownloadUrlRes struct {
 
 type CurseClient struct {
 	apiKey     string
-	httpClient HttpClient
+	httpClient *requests.Builder
 }
 
 func NewCurseClient(apiKey string) *CurseClient {
-	c := &CurseClient{
+	return &CurseClient{
 		apiKey: apiKey,
-		httpClient: NewHttpClient(
-			WithBaseURL("https://api.curseforge.com"),
-			WithAccept(acceptJson),
-			WithHeader("user-agent", userAgent),
-			WithHeader("x-api-key", apiKey),
-		),
+		httpClient: defaultRequestBuilder.
+			Clone().
+			BaseURL(cf_api_host).
+			Header("x-api-key", apiKey),
 	}
-	return c
 }
 
 func getApiKey() string {
@@ -45,7 +45,8 @@ func (c *CurseClient) getJson(ctx context.Context, path string, v any) error {
 	if c.apiKey == "" {
 		return fmt.Errorf("invalid curseforge api key")
 	}
-	err := httpGetJson(ctx, c.httpClient, path, &v)
+
+	err := c.httpClient.Path(path).ToJSON(&v).Fetch(context.WithoutCancel(ctx))
 	if err != nil {
 		return fmt.Errorf("curseforge api: %w", err)
 	}

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"sync"
 
@@ -17,15 +18,15 @@ type Repository struct {
 	Metafiles      []*MetafileToml
 	PackHashFormat string
 	PackHash       string
-	httpClient     HttpClient
+	httpClient     *http.Client
 }
 
-func NewRepository(c HttpClient, url *url.URL, hashFormat, hash string) *Repository {
+func NewRepository(url *url.URL, hashFormat, hash string) *Repository {
 	return &Repository{
 		Url:            url,
 		PackHashFormat: hashFormat,
 		PackHash:       hash,
-		httpClient:     c,
+		httpClient:     http.DefaultClient,
 	}
 }
 

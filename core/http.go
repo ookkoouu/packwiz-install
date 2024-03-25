@@ -1,56 +1,45 @@
 package core
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
+
+	"github.com/carlmjohnson/requests"
 )
 
 var (
-	userAgent         = "packwiz-install"
-	DefaultHttpClient = NewHttpClient(WithHeader("user-agent", userAgent))
+	userAgent             = "packwiz-install"
+	defaultRequestBuilder = newRequestBuilder(http.DefaultClient)
 )
 
-func httpGetJson(ctx context.Context, c HttpClient, url string, v any) error {
-	req, err := http.NewRequestWithContext(context.WithoutCancel(ctx), "GET", url, nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("accept", string(acceptJson))
-	res, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	return json.NewDecoder(res.Body).Decode(v)
+func newRequestBuilder(c *http.Client) *requests.Builder {
+	return requests.New().
+		Client(c).
+		UserAgent(userAgent)
 }
 
-func httpGetBytes(ctx context.Context, c HttpClient, url string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(context.WithoutCancel(ctx), "GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("accept", string(acceptOctetStream))
-
-	res, err := c.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+func httpGetJson(ctx context.Context, c *http.Client, url string, v any) error {
+	return defaultRequestBuilder.Clone().Client(c).BaseURL(url).ToJSON(&v).Fetch(ctx)
 }
 
-func httpGetValidBytes(ctx context.Context, c HttpClient, url string, hashFormat string, hash string) ([]byte, error) {
-	data, err := httpGetBytes(context.WithoutCancel(ctx), c, url)
+func httpGetBytes(ctx context.Context, c *http.Client, url string) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	err := defaultRequestBuilder.
+		Clone().
+		Client(c).
+		BaseURL(url).
+		ToBytesBuffer(buf).
+		Fetch(context.WithoutCancel(ctx))
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func httpGetValidBytes(ctx context.Context, c *http.Client, url string, hashFormat string, hash string) ([]byte, error) {
+	data, err := httpGetBytes(ctx, c, url)
 	if err != nil {
 		return nil, err
 	}
