@@ -67,11 +67,11 @@ func (i *LocalInstaller) saveCache(name string, v any) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(p), 0744)
+	err = os.MkdirAll(filepath.Dir(p), os.ModePerm)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(p, data, 0644)
+	return os.WriteFile(p, data, os.ModePerm)
 }
 
 func (i *LocalInstaller) restoreCache(name string, v any) error {
@@ -180,11 +180,11 @@ func (i *LocalInstaller) InstallMod(ctx context.Context, m *Mod) error {
 	}
 
 	p := filepath.Join(i.BaseDir, m.Path)
-	err = os.MkdirAll(filepath.Dir(p), 0744)
+	err = os.MkdirAll(filepath.Dir(p), os.ModePerm)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(p, data, 0644)
+	return os.WriteFile(p, data, os.ModePerm)
 }
 
 // Install execute install and update modpack
